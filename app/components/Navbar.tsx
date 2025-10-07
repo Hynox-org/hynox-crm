@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Icon } from '@iconify/react';
 import Link from 'next/link';
+import Image from 'next/image';
 
 export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -25,9 +26,11 @@ export default function Navbar() {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link href="/" className="flex items-center space-x-3">
-            <img
+            <Image
               src="/hynox_logo-transparent.png"
               alt="Hynox CRM Logo"
+              width={60}
+              height={60}
               className="h-15 w-auto"
             />
             <span className='text-xl font-bold text-gray-900'>Hynox CRM</span>

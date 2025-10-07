@@ -7,7 +7,6 @@ import FeaturesSection from '@/app/components/FeaturesSection';
 import ScreenshotsSection from '@/app/components/ScreenshotsSection';
 import BenefitsSection from '@/app/components/benefitssection';
 import PricingSection from '@/app/components/PricingSection';
-import TestimonialsSection from '@/app/components/TestimonialsSection';
 import AboutSection from '@/app/components/aboutsection';
 import CTASection from '@/app/components/CTASection';
 import Footer from '@/app/components/Footer';

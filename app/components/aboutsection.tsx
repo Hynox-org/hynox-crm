@@ -56,27 +56,6 @@ export default function AboutSection() {
     }
   ];
 
-  const team = [
-    {
-      name: 'Alex Chen',
-      role: 'CEO & Co-Founder',
-      bio: 'Former Salesforce PM who got tired of complex CRMs',
-      avatar: 'https://i.pravatar.cc/400?u=alex-chen'
-    },
-    {
-      name: 'Sarah Martinez',
-      role: 'CTO & Co-Founder',
-      bio: 'Ex-Stripe engineer passionate about payment simplicity',
-      avatar: 'https://i.pravatar.cc/400?u=sarah-martinez'
-    },
-    {
-      name: 'David Kim',
-      role: 'Head of Product',
-      bio: 'Former founder who knows the pain of tool sprawl',
-      avatar: 'https://i.pravatar.cc/400?u=david-kim'
-    }
-  ];
-
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
