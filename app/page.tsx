@@ -23,7 +23,7 @@ export default function Home() {
       <ScreenshotsSection />
       <BenefitsSection />
       <PricingSection />
-      <TestimonialsSection />
+      {/* <TestimonialsSection /> */}
       <AboutSection />
       <CTASection />
       <Footer />

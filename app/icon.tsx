@@ -18,7 +18,7 @@ export default function Icon() {
     }}>
 
         <img data-editor-id="app/icon.tsx:20:9"
-      src="https://storage.googleapis.com/cosmic-project-image-assets/images/c14a2256-a303-4bac-a5fb-bb9e62cd4f1a/favicon.png" // Replace with your public image URL
+      src="/favicon.ico" // Using the local favicon.ico
       style={{
         width: '100%',
         height: '100%',
