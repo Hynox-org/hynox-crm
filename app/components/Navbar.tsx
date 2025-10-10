@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Icon } from '@iconify/react';
 import Link from 'next/link';
+import { useEffect } from 'react';
 
 export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -13,6 +14,32 @@ export default function Navbar() {
     { name: 'Pricing', href: '#pricing' },
     { name: 'About', href: '#about' },
   ];
+
+const [countryCode, setCountryCode] = useState('');
+const [showCountryMenu, setShowCountryMenu] = useState(false);
+
+useEffect(() => {
+    const storedCode = localStorage.getItem("countryCode");
+    if (storedCode) {
+      setCountryCode(storedCode);
+    } else {
+      fetch(process.env.NEXT_COUNTRYCODE_API)
+        .then((res) => res.json())
+        .then((data) => {
+          const code = `EN-${data.country_code}`;
+          setCountryCode(code);
+          localStorage.setItem("countryCode", code);
+        })
+        .catch(() => setCountryCode("EN-IN"));
+    }
+  }, []);
+
+  const countryFlags = {
+    "EN-IN": "twemoji:flag-india",
+    "EN-US": "twemoji:flag-united-states",
+    "EN-UK": "twemoji:flag-united-kingdom",
+    "EN-AU": "twemoji:flag-australia",
+  };
 
   return (
     <motion.nav
@@ -62,6 +89,45 @@ export default function Navbar() {
               </div>
             ) : ( */}
               <>
+              {/* 🌐 Country Code Display */}
+              <div className="relative">
+                <button
+                  onClick={() => setShowCountryMenu(!showCountryMenu)}
+                  className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 transition"
+                >
+                  <div className="relative w-5 h-5">          
+                    <Icon
+                      icon={countryFlags[countryCode] || "twemoji:globe-showing-asia-australia"}
+                      className="absolute inset-0 w-4 h-4 translate-x-0.5 translate-y-0.5"
+                    />
+                  </div>
+                  <span>{countryCode}</span>
+                </button>
+
+               {/* Dropdown menu   */}
+                {showCountryMenu && (
+                  <div className="absolute right-0 mt-2 bg-white border rounded-lg shadow-lg py-2 w-36 z-50">
+                    {Object.entries(countryFlags).map(([code, flagIcon]) => (
+                      <button
+                        key={code}
+                        onClick={() => {
+                          setCountryCode(code);
+                          localStorage.setItem("countryCode", code);
+                          setShowCountryMenu(false);
+                        }}
+                          className="flex items-center gap-2 w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100"
+                      >
+                        <div className="relative w-5 h-5">
+                          <Icon icon="solar:globe-bold-duotone" className="absolute inset-0 w-5 h-5 opacity-70" />
+                          <Icon icon={flagIcon} className="absolute inset-0 w-4 h-4 translate-x-0.5 translate-y-0.5" />
+                        </div>
+                        <span>{code}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
                 <button
                   // onClick={signIn}
                   className="text-gray-600 hover:text-gray-900 transition-colors duration-200"

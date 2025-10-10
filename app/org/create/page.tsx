@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import AuthForm from "@/app/components/AuthForm";
 import { apiRequest } from "@/lib/api";
-import toast, { Toaster } from "react-hot-toast";
+import { Toaster, toast } from 'sonner';
 
 export default function OrgPage() {
   const router = useRouter();
@@ -24,7 +24,7 @@ export default function OrgPage() {
 
   return (
     <>
-      <Toaster position="top-right" reverseOrder={false} />
+      <Toaster position="top-right" />
       <AuthForm type="org" onSubmit={handleOrg} />
     </>
   );

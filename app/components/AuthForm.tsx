@@ -29,13 +29,13 @@ type OrgFormValues = {
 
 // ✅ Some commonly used country codes (you can add more if needed)
 const countryCodes = [
-  { code: "+1", label: "🇺🇸 USA (+1)" },
-  { code: "+44", label: "🇬🇧 UK (+44)" },
-  { code: "+91", label: "🇮🇳 India (+91)" },
-  { code: "+61", label: "🇦🇺 Australia (+61)" },
-  { code: "+81", label: "🇯🇵 Japan (+81)" },
-  { code: "+49", label: "🇩🇪 Germany (+49)" },
-  { code: "+33", label: "🇫🇷 France (+33)" },
+  { code: "+1", label: "🇺🇸 (+1)" },
+  { code: "+44", label: "🇬🇧 (+44)" },
+  { code: "+91", label: "🇮🇳 (+91)" },
+  { code: "+61", label: "🇦🇺 (+61)" },
+  { code: "+81", label: "🇯🇵 (+81)" },
+  { code: "+49", label: "🇩🇪 (+49)" },
+  { code: "+33", label: "🇫🇷 (+33)" },
 ];
 
 export default function AuthForm({ type, onSubmit }: AuthFormProps) {
