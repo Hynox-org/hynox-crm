@@ -23,6 +23,9 @@ export default function RootLayout({
       lang="en"
       className={primaryFont.className}
     >
+      <head>
+        <link rel="icon" href="/favicon.ico" />
+      </head>
       <body data-editor-id="app/layout.tsx:31:7" className="antialiased">
         <main data-editor-id="app/layout.tsx:32:9" className="h-screen">
           {children}

@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Icon } from '@iconify/react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useEffect } from 'react';
 
 export default function Navbar() {
@@ -52,10 +53,14 @@ useEffect(() => {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link href="/" className="flex items-center space-x-3">
-            <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-teal-500 rounded-lg flex items-center justify-center">
-              <span data-editor-id="app/components/Navbar.tsx:28:15" className="text-white font-bold text-sm">H</span>
-            </div>
-            <span data-editor-id="app/components/Navbar.tsx:30:13" className="text-xl font-medium text-gray-900">Hynox CRM</span>
+            <Image
+              src="/hynox_logo-transparent.png"
+              alt="Hynox CRM Logo"
+              width={60}
+              height={60}
+              className="h-15 w-auto"
+            />
+            <span className='text-xl font-bold text-gray-900'>Hynox CRM</span>
           </Link>
 
           {/* Desktop Navigation */}

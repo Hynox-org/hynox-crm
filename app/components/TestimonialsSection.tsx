@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence, cubicBezier } from 'framer-motion';
 import { Icon } from '@iconify/react';
+import Image from 'next/image';
 
 export default function TestimonialsSection() {
   const [activeTestimonial, setActiveTestimonial] = useState(0);
@@ -177,9 +178,11 @@ export default function TestimonialsSection() {
               {/* Author Info */}
               <div className="flex flex-col md:flex-row items-center justify-between">
                 <div className="flex items-center space-x-4 mb-6 md:mb-0">
-                  <img
+                  <Image
                     src={currentTestimonial.avatar}
                     alt={currentTestimonial.author}
+                    width={64}
+                    height={64}
                     className="w-16 h-16 rounded-full object-cover border-4 border-blue-100"
                   />
                   <div>
