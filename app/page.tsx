@@ -1,31 +1,21 @@
 'use client';
 
-import Navbar from '@/app/components/Navbar';
-import HeroSection from '@/app/components/HeroSection';
-import USPSection from '@/app/components/USPSection';
-import FeaturesSection from '@/app/components/FeaturesSection';
-import ScreenshotsSection from '@/app/components/ScreenshotsSection';
-import BenefitsSection from '@/app/components/benefitssection';
-import PricingSection from '@/app/components/PricingSection';
-import AboutSection from '@/app/components/aboutsection';
-import CTASection from '@/app/components/CTASection';
-import Footer from '@/app/components/Footer';
+import { DashboardMock } from "./components/dashboard-mock";
+import { FeaturesGrid } from "./components/features-grid";
+import { Hero } from "./components/hero";
+import { SiteFooter } from "./components/site-footer";
+import { SiteHeader } from "./components/site-header";
+import { TechStack } from "./components/tech-stack";
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-white">
-      <Navbar />
-      <HeroSection />
-      <USPSection />
-      <FeaturesSection />
-      {/* <ComparisonSection /> */}
-      <ScreenshotsSection />
-      <BenefitsSection />
-      <PricingSection />
-      {/* <TestimonialsSection /> */}
-      <AboutSection />
-      <CTASection />
-      <Footer />
-    </div>
+    <main id="content" className="min-h-dvh bg-background text-foreground">
+      <SiteHeader />
+      <Hero />
+      <FeaturesGrid />
+      <DashboardMock />
+      <TechStack />
+      <SiteFooter />
+    </main>
   );
 }
