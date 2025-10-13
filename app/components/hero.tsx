@@ -2,7 +2,6 @@
 
 import { cn } from "@/lib/utils";
 import { useRouter } from "next/navigation";
-import { useRef } from "react";
 
 // Example Illustration, replace with your own SVG or component
 function CRMIllustration() {
@@ -33,7 +32,6 @@ function CRMIllustration() {
 
 export function Hero() {
   const router = useRouter();
-  const footerRef = useRef<HTMLElement>(null);
 
   const scrollToFooter = () => {
     const footer = document.getElementById("site-footer");

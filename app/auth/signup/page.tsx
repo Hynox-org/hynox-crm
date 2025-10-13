@@ -5,10 +5,25 @@ import AuthForm from "@/app/components/AuthForm";
 import { apiRequest } from "@/lib/api";
 import { Toaster, toast } from 'sonner';
 
+interface SignupFormValues {
+  fullName?: string;
+  email?: string;
+  password?: string;
+  countryCode?: string;
+  phoneNumber?: string;
+  agree?: boolean;
+  [key: string]: unknown; // Add index signature
+}
+
+interface SignupApiResponse {
+  accessToken?: string;
+  message?: string;
+}
+
 export default function SignupPage() {
   const router = useRouter();
 
-  const handleSignup = async (form: any) => {
+  const handleSignup = async (form: SignupFormValues) => {
     try {
       const payload = {
         fullName: form.fullName,
@@ -20,7 +35,7 @@ export default function SignupPage() {
         agree: form.agree,
       };
 
-      const data = await apiRequest("/identity/api/auth/signup", "POST", payload);
+      const data = await apiRequest<SignupApiResponse>("/identity/api/auth/signup", "POST", payload);
 
       if (data.accessToken) {
         localStorage.setItem("token", data.accessToken);
@@ -28,9 +43,9 @@ export default function SignupPage() {
 
       toast.success("Signup successful!");
       router.push("/org/create");
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Signup error:", err);
-      toast.error(err.message || "Signup failed");
+      toast.error((err as Error).message || "Signup failed");
     }
   };
 

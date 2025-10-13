@@ -5,12 +5,24 @@ import AuthForm from "@/app/components/AuthForm";
 import { apiRequest } from "@/lib/api";
 import { Toaster, toast } from "sonner";
 
+interface LoginFormValues {
+  email?: string;
+  password?: string;
+  [key: string]: unknown; // Add index signature
+}
+
+interface LoginApiResponse {
+  accessToken?: string;
+  action?: "CREATE_ORG" | "UNAUTHORIZED_USER" | "DASHBOARD";
+  message?: string;
+}
+
 export default function LoginPage() {
   const router = useRouter();
 
-  const handleLogin = async (form: any) => {
+  const handleLogin = async (form: LoginFormValues) => {
     try {
-      const data = await apiRequest("/identity/api/auth/login", "POST", form);
+      const data = await apiRequest<LoginApiResponse>("/identity/api/auth/login", "POST", form);
 
       if (data.accessToken) {
         localStorage.setItem("token", data.accessToken);
@@ -34,9 +46,9 @@ export default function LoginPage() {
           router.push("/dashboard");
           break;
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Login error:", err);
-      toast.error(err.message || "Login failed");
+      toast.error((err as Error).message || "Login failed");
     }
   };
 

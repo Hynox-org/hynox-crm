@@ -1,10 +1,10 @@
 export const API_URL = process.env.NEXT_PUBLIC_API_GATEWAY_URL;
 const SERVICE_NAME = process.env.NEXT_PUBLIC_SERVICE_NAME || "default";
 
-export async function apiRequest<T = any>(
+export async function apiRequest<T>(
   endpoint: string,
   method: "GET" | "POST" | "PUT" | "DELETE" = "GET",
-  body: any = null,
+  body: Record<string, unknown> | null = null,
   token: string | null = null
 ): Promise<T> {
   const headers: HeadersInit = { "Content-Type": "application/json" };
@@ -36,8 +36,8 @@ export async function apiRequest<T = any>(
     }
 
     return data as T;
-  } catch (err: any) {
+  } catch (err: unknown) {
     // ✅ Always return a clean message
-    throw { message: err.message || "Something went wrong" };
+    throw { message: (err as Error).message || "Something went wrong" };
   }
 }

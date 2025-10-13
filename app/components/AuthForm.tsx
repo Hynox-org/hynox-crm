@@ -3,11 +3,6 @@
 import { useForm, SubmitHandler } from "react-hook-form";
 import Link from "next/link";
 
-type AuthFormProps = {
-  type: "signup" | "login" | "org";
-  onSubmit: SubmitHandler<any>;
-};
-
 type SignupFormValues = {
   fullName: string;
   email: string;
@@ -27,6 +22,11 @@ type OrgFormValues = {
   employeeCount: number;
 };
 
+type AuthFormProps =
+  | { type: "signup"; onSubmit: SubmitHandler<SignupFormValues> }
+  | { type: "login"; onSubmit: SubmitHandler<LoginFormValues> }
+  | { type: "org"; onSubmit: SubmitHandler<OrgFormValues> };
+
 // ✅ Some commonly used country codes (you can add more if needed)
 const countryCodes = [
   { code: "+1", label: "🇺🇸 (+1)" },
@@ -39,7 +39,7 @@ const countryCodes = [
 ];
 
 export default function AuthForm({ type, onSubmit }: AuthFormProps) {
-  const { register, handleSubmit } = useForm<any>();
+  const { register, handleSubmit } = useForm<SignupFormValues | LoginFormValues | OrgFormValues>();
 
   const titles: Record<string, string> = {
     signup: "Create your account",

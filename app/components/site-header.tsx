@@ -2,7 +2,7 @@
 
 import Image from "next/image"; // Import the Image component
 import { Button } from "@/components/ui/button";
-import { Menu, X, Sun, Moon } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import { Icon as IconifyIcon } from "@iconify/react";
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion"; // Added for smooth animations
