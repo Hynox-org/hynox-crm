@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Menu, X } from "lucide-react";
 import { Icon as IconifyIcon } from "@iconify/react";
 import { useEffect, useState } from "react";
+import { useIsMounted } from "@/hooks/useIsMounted";
 import { motion } from "framer-motion"; // Added for smooth animations
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -16,22 +17,25 @@ export function SiteHeader() {
   const [showCountryMenu, setShowCountryMenu] = useState(false);
   const router = useRouter();
   const { isAuthenticated, logout } = useAuth();
+  const mounted = useIsMounted();
 
   useEffect(() => {
-    const storedCode = localStorage.getItem("countryCode");
-    if (storedCode) {
-      setCountryCode(storedCode);
-    } else {
-      fetch(process.env.NEXT_COUNTRYCODE_API)
-        .then((res) => res.json())
-        .then((data) => {
-          const code = `EN-${data.country_code}`;
-          setCountryCode(code);
-          localStorage.setItem("countryCode", code);
-        })
-        .catch(() => setCountryCode("EN-IN"));
+    if (mounted) {
+      const storedCode = localStorage.getItem("countryCode");
+      if (storedCode) {
+        setCountryCode(storedCode);
+      } else {
+        fetch(process.env.NEXT_COUNTRYCODE_API)
+          .then((res) => res.json())
+          .then((data) => {
+            const code = `EN-${data.country_code}`;
+            setCountryCode(code);
+            localStorage.setItem("countryCode", code);
+          })
+          .catch(() => setCountryCode("EN-IN"));
+      }
     }
-  }, []);
+  }, [mounted]);
 
   // Modern color palette inspired by 2025 trends: deep midnight blue, burning red accents, aquamarine for highlights, cream neutrals
   // Using Tailwind classes with custom variables or extend in config
@@ -116,83 +120,85 @@ export function SiteHeader() {
         </nav>
 
         <div className="flex items-center space-x-4">
-          <div className="hidden md:flex items-center space-x-4">
-            {/* 🌐 Country Code Display */}
-            <div className="relative">
-              <button
-                onClick={() => setShowCountryMenu(!showCountryMenu)}
-                className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 transition"
-              >
-                <div className="relative w-5 h-5">
-                  <IconifyIcon
-                    icon={
-                      countryFlags[countryCode] ||
-                      "twemoji:globe-showing-asia-australia"
-                    }
-                    className="absolute inset-0 w-4 h-4 translate-x-0.5 translate-y-0.5"
-                  />
-                </div>
-                <span>{countryCode}</span>
-              </button>
+          {mounted && (
+            <div className="hidden md:flex items-center space-x-4">
+              {/* 🌐 Country Code Display */}
+              <div className="relative">
+                <button
+                  onClick={() => setShowCountryMenu(!showCountryMenu)}
+                  className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 transition"
+                >
+                  <div className="relative w-5 h-5">
+                    <IconifyIcon
+                      icon={
+                        countryFlags[countryCode] ||
+                        "twemoji:globe-showing-asia-australia"
+                      }
+                      className="absolute inset-0 w-4 h-4 translate-x-0.5 translate-y-0.5"
+                    />
+                  </div>
+                  <span>{countryCode}</span>
+                </button>
 
-              {/* Dropdown menu   */}
-              {showCountryMenu && (
-                <div className="absolute right-0 mt-2 bg-white border rounded-lg shadow-lg py-2 w-36 z-50">
-                  {Object.entries(countryFlags).map(([code, flagIcon]) => (
-                    <button
-                      key={code}
-                      onClick={() => {
-                        setCountryCode(code);
-                        localStorage.setItem("countryCode", code);
-                        setShowCountryMenu(false);
-                      }}
-                      className="flex items-center gap-2 w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100"
-                    >
-                      <div className="relative w-5 h-5">
-                        <IconifyIcon
-                          icon="solar:globe-bold-duotone"
-                          className="absolute inset-0 w-5 h-5 opacity-70"
-                        />
-                        <IconifyIcon
-                          icon={flagIcon}
-                          className="absolute inset-0 w-4 h-4 translate-x-0.5 translate-y-0.5"
-                        />
-                      </div>
-                      <span>{code}</span>
-                    </button>
-                  ))}
-                </div>
+                {/* Dropdown menu   */}
+                {showCountryMenu && (
+                  <div className="absolute right-0 mt-2 bg-white border rounded-lg shadow-lg py-2 w-36 z-50">
+                    {Object.entries(countryFlags).map(([code, flagIcon]) => (
+                      <button
+                        key={code}
+                        onClick={() => {
+                          setCountryCode(code);
+                          localStorage.setItem("countryCode", code);
+                          setShowCountryMenu(false);
+                        }}
+                        className="flex items-center gap-2 w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100"
+                      >
+                        <div className="relative w-5 h-5">
+                          <IconifyIcon
+                            icon="solar:globe-bold-duotone"
+                            className="absolute inset-0 w-5 h-5 opacity-70"
+                          />
+                          <IconifyIcon
+                            icon={flagIcon}
+                            className="absolute inset-0 w-4 h-4 translate-x-0.5 translate-y-0.5"
+                          />
+                        </div>
+                        <span>{code}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+              {isAuthenticated ? (
+                <Button
+                  onClick={() => {
+                    logout();
+                    router.push("/");
+                  }}
+                  className="bg-red-600 cursor-pointer hover:bg-red-700 text-white px-6 py-2 rounded-full shadow-lg hover:shadow-red-500/50 transition-all"
+                >
+                  Logout
+                </Button>
+              ) : (
+                <>
+                  <button
+                    onClick={() => router.push("/auth/login")}
+                    className="text-gray-600 hover:text-gray-900 transition-colors duration-200 border hover:border-black px-4 py-2 rounded-md cursor-pointer focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                  >
+                    <span>Login</span>
+                  </button>
+                  <Link
+                    href="/auth/signup"
+                    className="text-muted-foreground hover:text-foreground transition-colors text-sm"
+                  >
+                    <Button className="bg-red-600 cursor-pointer hover:bg-red-700 text-white px-6 py-2 rounded-full shadow-lg hover:shadow-red-500/50 transition-all">
+                      Sign Up
+                    </Button>
+                  </Link>
+                </>
               )}
             </div>
-            {isAuthenticated ? (
-              <Button
-                onClick={() => {
-                  logout();
-                  router.push("/");
-                }}
-                className="bg-red-600 cursor-pointer hover:bg-red-700 text-white px-6 py-2 rounded-full shadow-lg hover:shadow-red-500/50 transition-all"
-              >
-                Logout
-              </Button>
-            ) : (
-              <>
-                <button
-                  onClick={() => router.push("/auth/login")}
-                  className="text-gray-600 hover:text-gray-900 transition-colors duration-200 border hover:border-black px-4 py-2 rounded-md cursor-pointer focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-                >
-                  <span>Login</span>
-                </button>
-                <Link
-                  href="/auth/signup"
-                  className="text-muted-foreground hover:text-foreground transition-colors text-sm"
-                >
-                  <Button className="bg-red-600 cursor-pointer hover:bg-red-700 text-white px-6 py-2 rounded-full shadow-lg hover:shadow-red-500/50 transition-all">
-                    Sign Up
-                  </Button>
-                </Link>
-              </>
-            )}
-          </div>
+          )}
           <div className="md:hidden">
             <Button
               variant="ghost"
@@ -238,79 +244,83 @@ export function SiteHeader() {
             >
               Services
             </a>
-            {/* 🌐 Country Code Display */}
-            <div className="relative mx-auto">
-              <button
-                onClick={() => setShowCountryMenu(!showCountryMenu)}
-                className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 transition py-2"
-              >
-                <div className="relative w-5 h-5">
-                  <IconifyIcon
-                    icon={
-                      countryFlags[countryCode] ||
-                      "twemoji:globe-showing-asia-australia"
-                    }
-                    className="absolute inset-0 w-4 h-4 translate-x-0.5 translate-y-0.5"
-                  />
-                </div>
-                <span>{countryCode}</span>
-              </button>
-
-              {/* Dropdown menu   */}
-              {showCountryMenu && (
-                <div className="absolute right-0 mt-2 bg-white border rounded-lg shadow-lg py-2 w-36 z-50">
-                  {Object.entries(countryFlags).map(([code, flagIcon]) => (
-                    <button
-                      key={code}
-                      onClick={() => {
-                        setCountryCode(code);
-                        localStorage.setItem("countryCode", code);
-                        setShowCountryMenu(false);
-                      }}
-                      className="flex items-center gap-2 w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100"
-                    >
-                      <div className="relative w-5 h-5">
-                        <IconifyIcon
-                          icon="solar:globe-bold-duotone"
-                          className="absolute inset-0 w-5 h-5 opacity-70"
-                        />
-                        <IconifyIcon
-                          icon={flagIcon}
-                          className="absolute inset-0 w-4 h-4 translate-x-0.5 translate-y-0.5"
-                        />
-                      </div>
-                      <span>{code}</span>
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-            {isAuthenticated ? (
-              <Button
-                onClick={() => {
-                  logout();
-                  router.push("/");
-                }}
-                className="bg-red-600 cursor-pointer hover:bg-red-700 text-white px-6 py-2 rounded-full shadow-lg hover:shadow-red-500/50 transition-all"
-              >
-                Logout
-              </Button>
-            ) : (
+            {mounted && (
               <>
-                <button
-                  onClick={() => router.push("/auth/login")}
-                  className="text-gray-600 hover:text-gray-900 transition-colors duration-200 border hover:border-black px-4 py-2 rounded-md cursor-pointer focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-                >
-                  <span>Login</span>
-                </button>
-                <Link
-                  href="/auth/signup"
-                  className="text-muted-foreground hover:text-foreground transition-colors text-sm"
-                >
-                  <Button className="bg-red-600 cursor-pointer hover:bg-red-700 text-white px-6 py-2 rounded-full shadow-lg hover:shadow-red-500/50 transition-all">
-                    Sign Up
+                {/* 🌐 Country Code Display */}
+                <div className="relative mx-auto">
+                  <button
+                    onClick={() => setShowCountryMenu(!showCountryMenu)}
+                    className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 transition py-2"
+                  >
+                    <div className="relative w-5 h-5">
+                      <IconifyIcon
+                        icon={
+                          countryFlags[countryCode] ||
+                          "twemoji:globe-showing-asia-australia"
+                        }
+                        className="absolute inset-0 w-4 h-4 translate-x-0.5 translate-y-0.5"
+                      />
+                    </div>
+                    <span>{countryCode}</span>
+                  </button>
+
+                  {/* Dropdown menu   */}
+                  {showCountryMenu && (
+                    <div className="absolute right-0 mt-2 bg-white border rounded-lg shadow-lg py-2 w-36 z-50">
+                      {Object.entries(countryFlags).map(([code, flagIcon]) => (
+                        <button
+                          key={code}
+                          onClick={() => {
+                            setCountryCode(code);
+                            localStorage.setItem("countryCode", code);
+                            setShowCountryMenu(false);
+                          }}
+                          className="flex items-center gap-2 w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100"
+                        >
+                          <div className="relative w-5 h-5">
+                            <IconifyIcon
+                              icon="solar:globe-bold-duotone"
+                              className="absolute inset-0 w-5 h-5 opacity-70"
+                            />
+                            <IconifyIcon
+                              icon={flagIcon}
+                              className="absolute inset-0 w-4 h-4 translate-x-0.5 translate-y-0.5"
+                            />
+                          </div>
+                          <span>{code}</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                {isAuthenticated ? (
+                  <Button
+                    onClick={() => {
+                      logout();
+                      router.push("/");
+                    }}
+                    className="bg-red-600 cursor-pointer hover:bg-red-700 text-white px-6 py-2 rounded-full shadow-lg hover:shadow-red-500/50 transition-all"
+                  >
+                    Logout
                   </Button>
-                </Link>
+                ) : (
+                  <>
+                    <button
+                      onClick={() => router.push("/auth/login")}
+                      className="text-gray-600 hover:text-gray-900 transition-colors duration-200 border hover:border-black px-4 py-2 rounded-md cursor-pointer focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                    >
+                      <span>Login</span>
+                    </button>
+                    <Link
+                      href="/auth/signup"
+                      className="text-muted-foreground hover:text-foreground transition-colors text-sm"
+                    >
+                      <Button className="bg-red-600 cursor-pointer hover:bg-red-700 text-white px-6 py-2 rounded-full shadow-lg hover:shadow-red-500/50 transition-all">
+                        Sign Up
+                      </Button>
+                    </Link>
+                  </>
+                )}
               </>
             )}
           </nav>

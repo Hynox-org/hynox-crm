@@ -57,3 +57,7 @@ export async function validateToken(
 ): Promise<ValidateTokenResponse> {
   return apiRequest<ValidateTokenResponse>("/identity/api/auth/validate-token", "POST", null, token);
 }
+
+export async function oauthLogin(provider: string): Promise<{ message: string; url: string }> {
+  return apiRequest<{ message: string; url: string }>(`/identity/api/auth/oauth/login/${provider}`, "GET");
+}

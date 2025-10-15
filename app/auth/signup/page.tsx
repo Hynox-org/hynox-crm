@@ -2,8 +2,9 @@
 
 import { useRouter } from "next/navigation";
 import AuthForm from "@/app/components/AuthForm";
-import { apiRequest } from "@/lib/api";
+import { apiRequest, oauthLogin } from "@/lib/api";
 import { Toaster, toast } from 'sonner';
+import { Button } from "@/components/ui/button";
 
 interface SignupFormValues {
   fullName?: string;
@@ -49,10 +50,28 @@ export default function SignupPage() {
     }
   };
 
+  const handleGoogleLogin = async () => {
+    try {
+      const data = await oauthLogin("google");
+      router.push(data.url);
+    } catch (err: unknown) {
+      console.error("Google login error:", err);
+      toast.error((err as Error).message || "Google signup failed");
+    }
+  };
+
   return (
     <>
       <Toaster position="top-right" />
-      <AuthForm type="signup" onSubmit={handleSignup} />
+      <AuthForm
+        type="signup"
+        onSubmit={handleSignup}
+        renderOAuthButton={() => (
+          <Button onClick={handleGoogleLogin} className="w-full max-w-sm">
+            Sign up with Google
+          </Button>
+        )}
+      />
     </>
   );
 }
