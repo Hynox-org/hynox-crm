@@ -1,6 +1,16 @@
 export const API_URL = process.env.NEXT_PUBLIC_API_GATEWAY_URL;
 const SERVICE_NAME = process.env.NEXT_PUBLIC_SERVICE_NAME || "default";
 
+interface User {
+  id: string;
+  role: string;
+}
+
+interface ValidateTokenResponse {
+  message: string;
+  user: User;
+}
+
 export async function apiRequest<T>(
   endpoint: string,
   method: "GET" | "POST" | "PUT" | "DELETE" = "GET",
@@ -40,4 +50,10 @@ export async function apiRequest<T>(
     // ✅ Always return a clean message
     throw { message: (err as Error).message || "Something went wrong" };
   }
+}
+
+export async function validateToken(
+  token: string
+): Promise<ValidateTokenResponse> {
+  return apiRequest<ValidateTokenResponse>("/identity/api/auth/validate-token", "POST", null, token);
 }

@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import AuthForm from "@/app/components/AuthForm";
 import { apiRequest } from "@/lib/api";
 import { Toaster, toast } from "sonner";
+import { useAuth } from "@/app/context/AuthContext";
 
 interface LoginFormValues {
   email?: string;
@@ -12,20 +13,21 @@ interface LoginFormValues {
 }
 
 interface LoginApiResponse {
-  accessToken?: string;
+  token?: string;
   action?: "CREATE_ORG" | "UNAUTHORIZED_USER" | "DASHBOARD";
   message?: string;
 }
 
 export default function LoginPage() {
   const router = useRouter();
+  const { login } = useAuth();
 
   const handleLogin = async (form: LoginFormValues) => {
     try {
       const data = await apiRequest<LoginApiResponse>("/identity/api/auth/login", "POST", form);
 
-      if (data.accessToken) {
-        localStorage.setItem("token", data.accessToken);
+      if (data.token) {
+        await login(data.token); // Await the login function from AuthContext
       }
 
       // 🧭 Handle action from backend

@@ -8,12 +8,14 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion"; // Added for smooth animations
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/app/context/AuthContext";
 
 export function SiteHeader() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [countryCode, setCountryCode] = useState("");
   const [showCountryMenu, setShowCountryMenu] = useState(false);
   const router = useRouter();
+  const { isAuthenticated, logout } = useAuth();
 
   useEffect(() => {
     const storedCode = localStorage.getItem("countryCode");
@@ -162,20 +164,34 @@ export function SiteHeader() {
                 </div>
               )}
             </div>
-            <button
-              onClick={() => router.push('/auth/login')}
-              className="text-gray-600 hover:text-gray-900 transition-colors duration-200 border hover:border-black px-4 py-2 rounded-md cursor-pointer focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-            >
-              <span data-editor-id="app/components/Navbar.tsx:66:19">Login</span>
-            </button>
-            <Link
-              href="/auth/signup"
-              className="text-muted-foreground hover:text-foreground transition-colors text-sm"
-            >
-              <Button className="bg-red-600 cursor-pointer hover:bg-red-700 text-white px-6 py-2 rounded-full shadow-lg hover:shadow-red-500/50 transition-all">
-                Sign in
+            {isAuthenticated ? (
+              <Button
+                onClick={() => {
+                  logout();
+                  router.push("/");
+                }}
+                className="bg-red-600 cursor-pointer hover:bg-red-700 text-white px-6 py-2 rounded-full shadow-lg hover:shadow-red-500/50 transition-all"
+              >
+                Logout
               </Button>
-            </Link>
+            ) : (
+              <>
+                <button
+                  onClick={() => router.push("/auth/login")}
+                  className="text-gray-600 hover:text-gray-900 transition-colors duration-200 border hover:border-black px-4 py-2 rounded-md cursor-pointer focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                >
+                  <span>Login</span>
+                </button>
+                <Link
+                  href="/auth/signup"
+                  className="text-muted-foreground hover:text-foreground transition-colors text-sm"
+                >
+                  <Button className="bg-red-600 cursor-pointer hover:bg-red-700 text-white px-6 py-2 rounded-full shadow-lg hover:shadow-red-500/50 transition-all">
+                    Sign Up
+                  </Button>
+                </Link>
+              </>
+            )}
           </div>
           <div className="md:hidden">
             <Button
@@ -269,20 +285,34 @@ export function SiteHeader() {
                 </div>
               )}
             </div>
-            <button
-              onClick={() => router.push('/auth/login')}
-              className="text-gray-600 hover:text-gray-900 transition-colors duration-200 border hover:border-black px-4 py-2 rounded-md cursor-pointer focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-            >
-              <span data-editor-id="app/components/Navbar.tsx:66:19">Login</span>
-            </button>
-            <Link
-              href="/auth/signup"
-              className="text-muted-foreground hover:text-foreground transition-colors text-sm"
-            >
-              <Button className="bg-red-600 cursor-pointer hover:bg-red-700 text-white px-6 py-2 rounded-full shadow-lg hover:shadow-red-500/50 transition-all">
-                Sign in
+            {isAuthenticated ? (
+              <Button
+                onClick={() => {
+                  logout();
+                  router.push("/");
+                }}
+                className="bg-red-600 cursor-pointer hover:bg-red-700 text-white px-6 py-2 rounded-full shadow-lg hover:shadow-red-500/50 transition-all"
+              >
+                Logout
               </Button>
-            </Link>
+            ) : (
+              <>
+                <button
+                  onClick={() => router.push("/auth/login")}
+                  className="text-gray-600 hover:text-gray-900 transition-colors duration-200 border hover:border-black px-4 py-2 rounded-md cursor-pointer focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                >
+                  <span>Login</span>
+                </button>
+                <Link
+                  href="/auth/signup"
+                  className="text-muted-foreground hover:text-foreground transition-colors text-sm"
+                >
+                  <Button className="bg-red-600 cursor-pointer hover:bg-red-700 text-white px-6 py-2 rounded-full shadow-lg hover:shadow-red-500/50 transition-all">
+                    Sign Up
+                  </Button>
+                </Link>
+              </>
+            )}
           </nav>
         </motion.div>
       )}
