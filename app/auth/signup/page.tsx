@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import AuthForm from "@/app/components/AuthForm";
 import { apiRequest, oauthLogin } from "@/lib/api";
 import { Toaster, toast } from 'sonner';
+import { useAuth } from "@/app/context/AuthContext";
 import { Button } from "@/components/ui/button";
 
 interface SignupFormValues {
@@ -23,6 +24,7 @@ interface SignupApiResponse {
 
 export default function SignupPage() {
   const router = useRouter();
+  const { login } = useAuth();
 
   const handleSignup = async (form: SignupFormValues) => {
     try {
@@ -39,7 +41,7 @@ export default function SignupPage() {
       const data = await apiRequest<SignupApiResponse>("/identity/api/auth/signup", "POST", payload);
 
       if (data.accessToken) {
-        localStorage.setItem("token", data.accessToken);
+        await login(data.accessToken); // Await the login function from AuthContext
       }
 
       toast.success("Signup successful!");
