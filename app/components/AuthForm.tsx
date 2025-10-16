@@ -2,6 +2,7 @@
 
 import { useForm, SubmitHandler } from "react-hook-form";
 import Link from "next/link";
+import React from "react";
 
 type SignupFormValues = {
   fullName: string;
@@ -23,9 +24,9 @@ type OrgFormValues = {
 };
 
 type AuthFormProps =
-  | { type: "signup"; onSubmit: SubmitHandler<SignupFormValues> }
-  | { type: "login"; onSubmit: SubmitHandler<LoginFormValues> }
-  | { type: "org"; onSubmit: SubmitHandler<OrgFormValues> };
+  | { type: "signup"; onSubmit: SubmitHandler<SignupFormValues>; renderOAuthButton?: () => React.ReactNode }
+  | { type: "login"; onSubmit: SubmitHandler<LoginFormValues>; renderOAuthButton?: () => React.ReactNode }
+  | { type: "org"; onSubmit: SubmitHandler<OrgFormValues>; renderOAuthButton?: () => React.ReactNode };
 
 // ✅ Some commonly used country codes (you can add more if needed)
 const countryCodes = [
@@ -38,7 +39,7 @@ const countryCodes = [
   { code: "+33", label: "🇫🇷 (+33)" },
 ];
 
-export default function AuthForm({ type, onSubmit }: AuthFormProps) {
+export default function AuthForm({ type, onSubmit, renderOAuthButton }: AuthFormProps) {
   const { register, handleSubmit } = useForm<SignupFormValues | LoginFormValues | OrgFormValues>();
 
   const titles: Record<string, string> = {
@@ -115,6 +116,7 @@ export default function AuthForm({ type, onSubmit }: AuthFormProps) {
                 Login here
               </Link>
             </p>
+            {renderOAuthButton && <div className="mt-4">{renderOAuthButton()}</div>}
           </>
         )}
 
@@ -145,6 +147,7 @@ export default function AuthForm({ type, onSubmit }: AuthFormProps) {
                 Create an account
               </Link>
             </p>
+            {renderOAuthButton && <div className="mt-4">{renderOAuthButton()}</div>}
           </>
         )}
 

@@ -2,6 +2,7 @@
 
 import { cn } from "@/lib/utils";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/app/context/AuthContext";
 
 // Example Illustration, replace with your own SVG or component
 function CRMIllustration() {
@@ -32,6 +33,15 @@ function CRMIllustration() {
 
 export function Hero() {
   const router = useRouter();
+  const { isAuthenticated } = useAuth();
+
+  const handleGetStartedClick = () => {
+    if (isAuthenticated) {
+      router.push("/dashboard");
+    } else {
+      router.push("/auth/signup");
+    }
+  };
 
   const scrollToFooter = () => {
     const footer = document.getElementById("site-footer");
@@ -85,7 +95,7 @@ export function Hero() {
             {/* Call to action */}
             <div className="mt-8 flex gap-4">
               <button
-                onClick={() => {router.push('/auth/signup')}}
+                onClick={handleGetStartedClick}
                 className="cursor-pointer px-6 py-2 rounded-lg bg-[color:var(--color-brand)] text-white font-medium shadow hover:bg-[color:var(--color-brand-accent)] focus:outline-none transition"
                 type="button"
               >
