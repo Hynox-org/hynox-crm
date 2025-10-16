@@ -10,34 +10,47 @@ export async function apiRequest<T>(
   const headers: HeadersInit = { "Content-Type": "application/json" };
   if (token) headers.Authorization = `Bearer ${token}`;
 
-  const payload = body
-    ? { ...body, serviceName: SERVICE_NAME }
-    : { serviceName: SERVICE_NAME };
+  const payload =
+    body && Object.keys(body).length > 0
+      ? { ...body, serviceName: SERVICE_NAME }
+      : { serviceName: SERVICE_NAME };
 
   try {
+    console.log(" API Request:", {
+      url: `${API_URL}${endpoint}`,
+      method,
+      headers,
+      body: method !== "GET" ? payload : undefined,
+    });
+
     const res = await fetch(`${API_URL}${endpoint}`, {
       method,
       headers,
       body: method !== "GET" ? JSON.stringify(payload) : undefined,
     });
 
-    const data = await res.json().catch(() => ({}));
-
-    if (!res.ok) {
-      // ✅ Extract the clean message from backend
-      const cleanMessage =
-        data?.error ||
-        data?.message ||
-        data?.supabaseError ||
-        data?.details ||
-        "Something went wrong";
-
-      throw { message: cleanMessage };
+    let data: any = {};
+    try {
+      data = await res.json();
+    } catch {
+      console.warn("⚠️ Response not JSON or empty");
     }
 
+    if (!res.ok) {
+      console.error("❌ API Error:", res.status, data);
+      const cleanMessage =
+        data?.message ||
+        data?.error ||
+        data?.supabaseError ||
+        data?.details ||
+        `Request failed with status ${res.status}`;
+      throw new Error(cleanMessage);
+    }
+
+    console.log("✅ API Success:", data);
     return data as T;
-  } catch (err: unknown) {
-    // ✅ Always return a clean message
-    throw { message: (err as Error).message || "Something went wrong" };
+  } catch (err: any) {
+    console.error("🚨 apiRequest Catch:", err);
+    throw new Error(err?.message || "Something went wrong");
   }
 }
