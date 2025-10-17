@@ -6,7 +6,7 @@ import { apiRequest } from "@/lib/api";
 
 export default function LeadForm() {
   const [form, setForm] = useState({
-    leadOwner: "Harini Kandasamy",
+    leadOwner: "You",
     firstName: "",
     lastName: "",
     company: "",
@@ -14,7 +14,7 @@ export default function LeadForm() {
     phone: "",
     leadSource: "",
     leadStatus: "",
-    industry: "",
+    Industry: "",
     noOfEmployees: "",
     annualRevenue: "",
     street: "",
@@ -61,7 +61,6 @@ export default function LeadForm() {
     try {
       const token = localStorage.getItem("token");
       console.log("Token before API call:", token);
-
       if (!token) {
         toast.error("❌ Token not found. Please log in again.");
         return;
@@ -74,7 +73,7 @@ export default function LeadForm() {
 
       // Reset form after success
       setForm({
-        leadOwner: "Harini Kandasamy",
+        leadOwner: "",
         firstName: "",
         lastName: "",
         company: "",
@@ -82,7 +81,7 @@ export default function LeadForm() {
         phone: "",
         leadSource: "",
         leadStatus: "",
-        industry: "",
+        Industry: "",
         noOfEmployees: "",
         annualRevenue: "",
         street: "",
@@ -102,7 +101,6 @@ export default function LeadForm() {
 
   return (
     <>
-
       <Toaster richColors position="top-right" />
 
       <form
@@ -222,7 +220,7 @@ export default function LeadForm() {
             <input
               type="text"
               name="industry"
-              value={form.industry}
+              value={form.Industry}
               onChange={handleChange}
               className="w-full border rounded p-2"
             />

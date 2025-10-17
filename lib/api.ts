@@ -1,6 +1,6 @@
 export const API_URL = process.env.NEXT_PUBLIC_API_GATEWAY_URL;
 const SERVICE_NAME = process.env.NEXT_PUBLIC_SERVICE_NAME || "default";
-
+// const name= localStorage.getItem("name");
 interface User {
   id: string;
   role: string;
@@ -15,28 +15,29 @@ export async function apiRequest<T>(
   endpoint: string,
   method: "GET" | "POST" | "PUT" | "DELETE" = "GET",
   body: Record<string, unknown> | null = null,
-  token: string | null = null
+  token: string | null = null,
+  name: string | null = null
 ): Promise<T> {
   const headers: HeadersInit = { "Content-Type": "application/json" };
   if (token) headers.Authorization = `Bearer ${token}`;
 
   const payload =
     body && Object.keys(body).length > 0
-      ? { ...body, serviceName: SERVICE_NAME }
-      : { serviceName: SERVICE_NAME };
+      ? { ...body, serviceName: SERVICE_NAME ,name}
+      : { serviceName: SERVICE_NAME ,name};
 
   try {
     console.log(" API Request:", {
       url: `${API_URL}${endpoint}`,
       method,
       headers,
-      body: method !== "GET" ? payload : undefined,
+      body: method !== "GET" ? payload : name,
     });
 
     const res = await fetch(`${API_URL}${endpoint}`, {
       method,
       headers,
-      body: method !== "GET" ? JSON.stringify(payload) : undefined,
+      body: method !== "GET" ? JSON.stringify(payload) : name,
     });
 
     let data: any = {};
@@ -68,9 +69,9 @@ export async function apiRequest<T>(
 export async function validateToken(
   token: string
 ): Promise<ValidateTokenResponse> {
-  return apiRequest<ValidateTokenResponse>("/identity/api/auth/validate-token", "POST", null, token);
+  return apiRequest<ValidateTokenResponse>("/identity/api/auth/validate-token", "POST", null, token );
 }
 
 export async function oauthLogin(provider: string): Promise<{ message: string; url: string }> {
-  return apiRequest<{ message: string; url: string }>(`/identity/api/auth/oauth/login/${provider}`, "GET");
+  return apiRequest<{ message: string; url: string }>(`/identity/api/auth/oauth/login/${provider}`, "GET",null, null);
 }
