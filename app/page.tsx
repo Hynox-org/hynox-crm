@@ -9,6 +9,7 @@ import { Hero } from "./components/hero";
 import { SiteFooter } from "./components/site-footer";
 import { SiteHeader } from "./components/site-header";
 import { TechStack } from "./components/tech-stack";
+import { validateToken } from "@/lib/api";
 
 export default function Home() {
   const router = useRouter();

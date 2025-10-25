@@ -14,7 +14,7 @@ interface LoginFormValues {
 }
 
 interface LoginApiResponse {
-  token?: string;
+  accessToken?: string;
   action?: "CREATE_ORG" | "UNAUTHORIZED_USER" | "DASHBOARD";
   message?: string;
 }
@@ -27,8 +27,8 @@ export default function LoginPage() {
     try {
       const data = await apiRequest<LoginApiResponse>("/identity/api/auth/login", "POST", form);
 
-      if (data.token) {
-        await login(data.token); // Await the login function from AuthContext
+      if (data.accessToken) {
+        await login(data.accessToken); // Await the login function from AuthContext
       }
 
       // 🧭 Handle action from backend
