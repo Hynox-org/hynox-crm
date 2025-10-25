@@ -5,10 +5,16 @@ import { useRouter } from "next/navigation";
 import {
   FaFolder, FaChartBar, FaStore, FaSearch, FaUserCircle,
   FaCog, FaPlusCircle, FaHome, FaPhone, FaFileAlt,
-  FaTasks, FaCalendarAlt , FaChartLine, FaClipboardList
+  FaTasks, FaCalendarAlt, FaChartLine, FaClipboardList
 } from "react-icons/fa";
 
-export default function Sidebar() {
+export default function Sidebar({
+  sidebarOpen,
+  subLayerOpen,
+}: {
+  sidebarOpen: boolean;
+  subLayerOpen: boolean;
+}) {
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
   const router = useRouter();
 
@@ -39,37 +45,29 @@ export default function Sidebar() {
       subItems: [
         { name: "Reports", path: "/dashboard/crm/report" },
         { name: "Folders", path: "/dashboard/crm/folder" },
-        { name: "All Reports",},
-        { name: "My Reports", },
-        { name: "Favorites",},
-        { name: "Recently Viewed",},
-        { name: "Recently Deleted",},
-        { name: "Account and Contact Reports",},
-        { name: "Deal Reports",},
-        { name: "Lead Reports",},
-        // { name: "Campaign Reports",},
-        // { name: "Case and Solution Reports",},
-        // { name: "Product Reports", },
-        // { name: "Vendor Reports",},
-        // { name: "Quote Reports",},
-        // { name: "Sales Order Reports",},
-        // { name: "Purchase Order Reports", },
-        // { name: "Invoice Reports", },
-        // { name: "Sales Metrics Reports",},
-        { name: "Email Reports",},
-        { name: "Meeting Reports", },
+        { name: "All Reports" },
+        { name: "My Reports" },
+        { name: "Favorites" },
+        { name: "Recently Viewed" },
+        { name: "Recently Deleted" },
+        { name: "Account and Contact Reports" },
+        { name: "Deal Reports" },
+        { name: "Lead Reports" },
+        // { name: "Campaign Reports"},
+        // { name: "Case and Solution Reports"},
+        // { name: "Product Reports" },
+        // { name: "Vendor Reports"},
+        // { name: "Quote Reports"},
+        // { name: "Sales Order Reports"},
+        // { name: "Purchase Order Reports" },
+        // { name: "Invoice Reports" },
+        // { name: "Sales Metrics Reports"},
+        { name: "Email Reports" },
+        { name: "Meeting Reports" },
       ],
     },
-    {
-      id: "marketplace",
-      icon: <FaStore />,
-      label: "Marketplace",
-    },
-    {
-      id: "search",
-      icon: <FaSearch />,
-      label: "Search",
-    },
+    { id: "marketplace", icon: <FaStore />, label: "Marketplace" },
+    { id: "search", icon: <FaSearch />, label: "Search" },
   ];
 
   const bottomItems = [
@@ -78,12 +76,19 @@ export default function Sidebar() {
     { id: "addnew", icon: <FaPlusCircle />, label: "Add New", path: "/add-new" },
   ];
 
-  const handleSubItemClick = (path: string) => router.push(path);
+  const handleSubItemClick = (path: string) => {
+    if (path) router.push(path);
+  };
+
+  if (!sidebarOpen) {
+    //  Entire sidebar hidden on small screens
+    return null;
+  }
 
   return (
     <div className="flex h-screen">
-      {/* Left Narrow Sidebar */}
-      <div className="w-16 bg-gray-900 text-white flex flex-col justify-between items-center py-4">
+      {/* Main Sidebar */}
+      <div className="w-16 bg-gray-900 text-white flex flex-col justify-between items-center py-4 transition-all duration-300">
         <div className="flex flex-col items-center space-y-6">
           {menuItems.map((item) => (
             <button
@@ -111,13 +116,13 @@ export default function Sidebar() {
         </div>
       </div>
 
-      {/* Expandable Sidebar Panel */}
+      {/* Sublayer (Expandable Sidebar Panel) */}
       <div
-        className={`transition-all duration-300 bg-white shadow-lg ${
-          activeMenu ? "w-56" : "w-0"
-        } overflow-hidden`}
+        className={`transition-all duration-300 bg-white shadow-lg overflow-hidden ${
+          subLayerOpen && activeMenu ? "w-56" : "w-0"
+        }`}
       >
-        {activeMenu && (
+        {subLayerOpen && activeMenu && (
           <div className="p-4">
             <h2 className="text-lg font-semibold mb-4">
               {menuItems.find((i) => i.id === activeMenu)?.label}

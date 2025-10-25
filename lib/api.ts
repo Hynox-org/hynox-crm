@@ -9,6 +9,7 @@ interface User {
 interface ValidateTokenResponse {
   message: string;
   user: User;
+  action?: string;
 }
 
 export async function apiRequest<T>(
@@ -48,7 +49,7 @@ export async function apiRequest<T>(
     }
 
     if (!res.ok) {
-      console.error("❌ API Error:", res.status, data);
+      console.error("❌ API Error:", res?.status, data);
       const cleanMessage =
         data?.message ||
         data?.error ||
@@ -62,12 +63,14 @@ export async function apiRequest<T>(
     return data as T;
   } catch (err: any) {
     console.error("🚨 apiRequest Catch:", err);
+    if(err==="token not found") {localStorage.removeItem("token"); throw new Error("session expired Please log in again.");}
+    
     throw new Error(err?.message || "Something went wrong");
   }
 }
 
 export async function validateToken(
-  token: string
+  token: string,
 ): Promise<ValidateTokenResponse> {
   return apiRequest<ValidateTokenResponse>("/identity/api/auth/validate-token", "POST", null, token );
 }

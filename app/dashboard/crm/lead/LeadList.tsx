@@ -1,28 +1,17 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
-  Avatar,
-  IconButton,
-  Button,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  TextField,
-  Backdrop,
-  CircularProgress,
-  MenuItem,
+  Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
+  Paper, Avatar, IconButton, Button, Dialog, DialogTitle, DialogContent,
+  TextField, Backdrop, CircularProgress, MenuItem, Tooltip
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import AssignmentIcon from "@mui/icons-material/Assignment";
-import { apiRequest } from "@/lib/api"; // ✅ make sure this import path is correct
+import { apiRequest } from "@/lib/api";
+import { toast } from "sonner";
+import Autocomplete from "@mui/material/Autocomplete";
 
 interface Lead {
   _id: string;
@@ -42,122 +31,156 @@ interface LeadListProps {
 }
 
 const LeadList: React.FC<LeadListProps> = ({ leads, refreshLeads }) => {
+  const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [openFilter, setOpenFilter] = useState(false);
+  const [showTaskForm, setShowTaskForm] = useState(false);
+  const [filteredLeads, setFilteredLeads] = useState<Lead[]>(leads);
   const [filters, setFilters] = useState({
     status: "",
     company: "",
     name: "",
   });
-  const [showTaskForm, setShowTaskForm] = useState(false);
+
+  // ✅ Company dropdown state
+  const [companyOptions, setCompanyOptions] = useState<string[]>([]);
+  const [loadingCompanies, setLoadingCompanies] = useState(false);
 
   const API_BASE = "/crm/api/lead";
 
-  // ✅ Fixed delete with token
+  useEffect(() => {
+    setFilteredLeads(leads); // ✅ Sync table when parent updates
+  }, [leads]);
+
+  // ✅ Delete Lead
   const handleDelete = async (id: string) => {
     setLoading(true);
     try {
       const token = localStorage.getItem("token");
-      if (!token) throw new Error("Token not found");
+      if (!token) { 
+        toast.error("session expired. Please log in again.");
+         throw new Error("Token missing");
+        return router.push("/auth/login");}
 
       await apiRequest(`${API_BASE}/${id}`, "DELETE", null, token);
-      await refreshLeads();
+      toast.success("Lead deleted successfully!");
+      refreshLeads();
     } catch (error) {
-      console.error("❌ Error deleting lead:", error);
+      console.error("Delete failed:", error);
     } finally {
       setLoading(false);
     }
   };
 
-  // 🔹 Handle input change for filters
+  // ✅ Controlled Input Filter Change
   const handleFilterChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFilters({ ...filters, [name]: value });
+    setFilters({ ...filters, [e.target.name]: e.target.value });
   };
 
-  // 🔹 Apply Filters
+  // ✅ Apply filters WITHOUT modifying props
   const applyFilters = async () => {
     setLoading(true);
     try {
+      const token = localStorage.getItem("token");
       const queryParams = new URLSearchParams();
 
-      if (filters.status) queryParams.append("leadStatus", filters.status);
+      if (filters.status) queryParams.append("status", filters.status);
       if (filters.company) queryParams.append("company", filters.company);
       if (filters.name) queryParams.append("name", filters.name);
 
-      const token = localStorage.getItem("token");
-      const data = await apiRequest(
+      // ✅ Explicitly type the response as Lead[]
+      const data = await apiRequest<Lead[]>(
         `${API_BASE}/filter?${queryParams.toString()}`,
         "GET",
         null,
         token
       );
-
-      console.log("Filtered leads:", data);
+      setFilteredLeads(data || []);
       setOpenFilter(false);
-
-      // directly replace leads shown
-      if (data && Array.isArray(data)) {
-        (leads as any).splice(0, leads.length, ...data);
-      }
     } catch (error) {
-      console.error("❌ Error applying filters:", error);
+      console.error("Filter failed:", error);
     } finally {
       setLoading(false);
     }
   };
 
-  if (loading)
-    return (
-      <Backdrop open>
-        <CircularProgress color="inherit" />
-      </Backdrop>
-    );
+  // ✅ Fetch unique company names safely
+  useEffect(() => {
+    const fetchCompanyNames = async () => {
+      try {
+        setLoadingCompanies(true);
+        const token = localStorage.getItem("token");
+
+        // ✅ Explicitly type the response as Lead[]
+        const data = await apiRequest<Lead[]>(`${API_BASE}`, "GET", null, token);
+
+        const uniqueNames = [
+          ...new Set(data.map((lead) => lead.company).filter(Boolean)),
+        ];
+
+        setCompanyOptions(uniqueNames);
+      } catch (error) {
+        console.error("Company fetch failed:", error);
+      } finally {
+        setLoadingCompanies(false);
+      }
+    };
+
+    fetchCompanyNames();
+  }, []);
 
   return (
     <div style={{ padding: "20px", position: "relative" }}>
-      {/* 🔹 Header Buttons */}
+      {/* ✅ Loading Overlay */}
+      {loading && (
+        <Backdrop open>
+          <CircularProgress color="inherit" />
+        </Backdrop>
+      )}
+
+      {/* Header */}
       <div className="flex justify-between items-center mb-4">
         <Button variant="contained" onClick={() => setOpenFilter(true)}>
           Filter
         </Button>
-        <Button variant="outlined" color="primary" onClick={refreshLeads}>
+        <Button variant="outlined" onClick={refreshLeads}>
           Refresh
         </Button>
       </div>
 
-      {/* 🔹 Table */}
+      {/* ✅ Table now uses filteredLeads */}
       <TableContainer component={Paper}>
         <Table>
           <TableHead>
             <TableRow>
               <TableCell>Lead Name</TableCell>
               <TableCell>Company</TableCell>
-              <TableCell>Lead Status</TableCell>
+              <TableCell>Status</TableCell>
               <TableCell>Email</TableCell>
               <TableCell>Phone</TableCell>
-              <TableCell>Lead Owner</TableCell>
+              <TableCell>Owner</TableCell>
               <TableCell>Action</TableCell>
             </TableRow>
           </TableHead>
+
           <TableBody>
-            {leads.map((lead) => (
+            {filteredLeads.map((lead) => (
               <TableRow key={lead._id}>
                 <TableCell>
-                  <div style={{ display: "flex", alignItems: "center" }}>
-                    <Avatar
-                      src={lead.profilePic || ""}
-                      alt={lead.firstName}
-                      style={{ marginRight: 10 }}
-                    />
-                    {lead.firstName} {lead.lastName}
+                  <div className="flex items-center">
+                    <Avatar src={lead.profilePic || ""} />
+                    <span className="ml-2 truncate max-w-[120px]">
+                      {lead.firstName} {lead.lastName}
+                    </span>
                   </div>
                 </TableCell>
+
                 <TableCell>{lead.company}</TableCell>
                 <TableCell>{lead.leadStatus}</TableCell>
                 <TableCell>{lead.email}</TableCell>
                 <TableCell>{lead.phone}</TableCell>
                 <TableCell>{lead.leadOwner}</TableCell>
+
                 <TableCell>
                   <IconButton onClick={() => handleDelete(lead._id)}>
                     <DeleteIcon color="error" />
@@ -172,10 +195,12 @@ const LeadList: React.FC<LeadListProps> = ({ leads, refreshLeads }) => {
         </Table>
       </TableContainer>
 
-      {/* 🔹 Filter Popup */}
+      {/* ✅ Filter Dialog */}
       <Dialog open={openFilter} onClose={() => setOpenFilter(false)}>
         <DialogTitle>Filter Leads</DialogTitle>
         <DialogContent className="flex flex-col gap-3 mt-2 w-[300px]">
+
+          {/* Status Filter */}
           <TextField
             select
             label="Lead Status"
@@ -191,14 +216,20 @@ const LeadList: React.FC<LeadListProps> = ({ leads, refreshLeads }) => {
             <MenuItem value="Lost">Lost</MenuItem>
           </TextField>
 
-          <TextField
-            label="Company"
-            name="company"
-            value={filters.company}
-            onChange={handleFilterChange}
-            fullWidth
+          {/* Company Autocomplete */}
+          <Autocomplete
+            freeSolo
+            loading={loadingCompanies}
+            options={companyOptions}
+            onChange={(_, value) =>
+              setFilters({ ...filters, company: value || "" })
+            }
+            renderInput={(params) => (
+              <TextField {...params} label="Company" fullWidth />
+            )}
           />
 
+          {/* Name Search */}
           <TextField
             label="Lead Name"
             name="name"
@@ -207,23 +238,9 @@ const LeadList: React.FC<LeadListProps> = ({ leads, refreshLeads }) => {
             fullWidth
           />
 
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={applyFilters}
-            className="mt-3"
-          >
+          <Button variant="contained" onClick={applyFilters}>
             Apply Filters
           </Button>
-        </DialogContent>
-      </Dialog>
-
-      {/* 🔹 Task Form Popup */}
-      <Dialog open={showTaskForm} onClose={() => setShowTaskForm(false)}>
-        <DialogTitle>Assign Task</DialogTitle>
-        <DialogContent>
-          <p>Task form content here...</p>
-          <Button onClick={() => setShowTaskForm(false)}>Close</Button>
         </DialogContent>
       </Dialog>
     </div>

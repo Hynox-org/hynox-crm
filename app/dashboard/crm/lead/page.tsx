@@ -3,39 +3,41 @@
 import { useEffect, useState } from "react";
 import LeadForm from "./LeadForm";
 import LeadList from "./LeadList";
-import { apiRequest } from "@/lib/api"; // ✅ custom API util
+import { apiRequest } from "@/lib/api";
 import { Toaster, toast } from "sonner";
+import { useRouter } from "next/navigation";
 
 export default function LeadPage() {
+  const router = useRouter();
   const [leads, setLeads] = useState<any[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const API_BASE = "/crm/api/lead/";
 
-  // 🔹 Fetch leads from backend
+  //  Fetch leads from backend
   const fetchLeads = async () => {
     setLoading(true);
     try {
       const token = localStorage.getItem("token");
       if (!token) {
-        toast.error("❌ Token not found. Please log in again.");
+        toast.error("session expired. Please log in again.");
         setLeads([]);
-        return;
+        return router.push("/auth/login");
       }
 
       const data = await apiRequest<any[]>(API_BASE, "GET", null, token);
-      console.log("✅ Leads fetched:", data);
+      console.log(" Leads fetched:", data);
       setLeads(data || []);
     } catch (err) {
-      console.error("❌ Failed to fetch leads:", err);
+      console.error("Failed to fetch leads:", err);
       setLeads([]);
     } finally {
       setLoading(false);
     }
   };
 
-  // 🔹 Run once on mount
+  //  Run once on mount
   useEffect(() => {
     fetchLeads();
   }, []);
@@ -47,6 +49,10 @@ export default function LeadPage() {
       fetchLeads();
     }
     setShowForm(!showForm);
+  };
+const handleLeadCreated = async () => {
+    await fetchLeads();
+    setShowForm(false);
   };
 
   return (
@@ -69,7 +75,7 @@ export default function LeadPage() {
         {loading ? (
           <p className="text-center text-gray-500">Loading leads...</p>
         ) : showForm ? (
-          <LeadForm />
+          <LeadForm onLeadCreated={handleLeadCreated} />
         ) : leads.length > 0 ? (
           <LeadList leads={leads} refreshLeads={fetchLeads} />
         ) : (

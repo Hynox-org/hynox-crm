@@ -1,10 +1,14 @@
 "use client";
 
-import { useState } from "react";
-import { Toaster, toast } from "sonner"; 
+import { useState ,useEffect} from "react";
+import { Toaster, toast } from "sonner";
 import { apiRequest } from "@/lib/api";
+import Autocomplete from "@mui/material/Autocomplete";
+import TextField from "@mui/material/TextField";
+import { useRouter } from "next/navigation";
 
-export default function LeadForm() {
+export default function LeadForm({ onLeadCreated }: { onLeadCreated?: () => void }) {
+  const router = useRouter();
   const [form, setForm] = useState({
     leadOwner: "You",
     firstName: "",
@@ -26,6 +30,43 @@ export default function LeadForm() {
   });
 
   const [loading, setLoading] = useState(false);
+  const [companyOptions, setCompanyOptions] = useState<string[]>([]);
+  const [loadingCompanies, setLoadingCompanies] = useState(false);
+
+  //  Fetch company names 
+  useEffect(() => {
+  const fetchCompanyNames = async () => {
+    try {
+      setLoadingCompanies(true);
+      const token = localStorage.getItem("token");
+      if (!token) {
+        toast.error("session expired. Please log in again.");
+        return router.push("/auth/login");
+      }
+
+      //  GET request 
+      const data = await apiRequest("/crm/api/lead/filter", "GET", null, token);
+
+      if (Array.isArray(data)) {
+        const names = data
+          .map((lead: any) => lead.company)
+          .filter((name: any): name is string => typeof name === "string");
+
+        const uniqueNames = Array.from(new Set(names));
+        setCompanyOptions(uniqueNames);
+      } else {
+        toast.error("Invalid data format from API");
+      }
+    } catch (error: any) {
+      console.error("Error fetching company names:", error);
+      toast.error("Failed to load company names");
+    }finally {
+      setLoadingCompanies(false);
+    }
+  };
+
+  fetchCompanyNames();
+}, []);
 
   const leadSourceOptions = [
     "None",
@@ -62,14 +103,15 @@ export default function LeadForm() {
       const token = localStorage.getItem("token");
       console.log("Token before API call:", token);
       if (!token) {
-        toast.error("❌ Token not found. Please log in again.");
-        return;
+        toast.error(" session expired. Please log in again.");
+        return router.push("/auth/login");
       }
 
       const data = await apiRequest("/crm/api/lead/create", "POST", form, token);
 
-      toast.success("✅ Lead created successfully!");
+      toast.success("Lead created successfully!");
       console.log("Response:", data);
+      if (onLeadCreated) onLeadCreated();
 
       // Reset form after success
       setForm({
@@ -92,7 +134,7 @@ export default function LeadForm() {
         description: "",
       });
     } catch (err: any) {
-      toast.error(`❌ Failed to create lead: ${err.message}`);
+      toast.error(` Failed to create lead: ${err.message}`);
       console.error("Error:", err);
     } finally {
       setLoading(false);
@@ -122,7 +164,6 @@ export default function LeadForm() {
               className="w-full border rounded p-2 bg-gray-100 cursor-not-allowed"
             />
           </div>
-
     
           <div>
             <label className="block text-sm font-medium mb-1">First Name *</label>
@@ -148,16 +189,44 @@ export default function LeadForm() {
             />
           </div>
 
+          {/* Company Autocomplete (Dynamic from API) */}
           <div>
             <label className="block text-sm font-medium mb-1">Company *</label>
-            <input
-              type="text"
-              name="company"
+            <Autocomplete
+              freeSolo
+              loading={loadingCompanies}
+              options={companyOptions}
               value={form.company}
-              onChange={handleChange}
-              required
-              className="w-full border rounded p-2"
+              onChange={(_, newValue) => {
+                // When user selects from dropdown
+                setForm((prev) => ({ ...prev, company: newValue || "" }));
+              }}
+              onInputChange={(_, newInputValue) => {
+                // When user types manually
+                setForm((prev) => ({ ...prev, company: newInputValue || "" }));
+              }}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  required
+                  placeholder="Search or enter company name"
+                  variant="outlined"
+                  size="small"
+                  InputProps={{
+                    ...params.InputProps,
+                    endAdornment: (
+                      <>
+                        {loadingCompanies ? (
+                          <span className="text-gray-400 text-xs mr-2">Loading...</span>
+                        ) : null}
+                        {params.InputProps.endAdornment}
+                      </>
+                    ),
+                  }}
+                />
+              )}
             />
+
           </div>
 
           <div>
@@ -167,6 +236,7 @@ export default function LeadForm() {
               name="email"
               value={form.email}
               onChange={handleChange}
+              required
               className="w-full border rounded p-2"
             />
           </div>
@@ -219,7 +289,7 @@ export default function LeadForm() {
             <label className="block text-sm font-medium mb-1">Industry</label>
             <input
               type="text"
-              name="industry"
+              name="Industry"
               value={form.Industry}
               onChange={handleChange}
               className="w-full border rounded p-2"
