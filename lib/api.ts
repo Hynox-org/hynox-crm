@@ -1,15 +1,17 @@
 export const API_URL = process.env.NEXT_PUBLIC_API_GATEWAY_URL;
-const SERVICE_NAME = process.env.NEXT_PUBLIC_SERVICE_NAME || "default";
+const SERVICE_NAME = process.env.NEXT_PUBLIC_SERVICE_NAME ;
 // const name= localStorage.getItem("name");
 interface User {
   id: string;
   role: string;
+  orgId: string;
 }
 
 interface ValidateTokenResponse {
   message: string;
   user: User;
   action?: string;
+  orgId: string;  
 }
 
 export async function apiRequest<T>(
@@ -17,28 +19,28 @@ export async function apiRequest<T>(
   method: "GET" | "POST" | "PUT" | "DELETE" = "GET",
   body: Record<string, unknown> | null = null,
   token: string | null = null,
-  name: string | null = null
+  // name: string | null = null
 ): Promise<T> {
   const headers: HeadersInit = { "Content-Type": "application/json" };
   if (token) headers.Authorization = `Bearer ${token}`;
 
   const payload =
     body && Object.keys(body).length > 0
-      ? { ...body, serviceName: SERVICE_NAME ,name}
-      : { serviceName: SERVICE_NAME ,name};
+      ? { ...body, serviceName: SERVICE_NAME }
+      : { serviceName: SERVICE_NAME };
 
   try {
     console.log(" API Request:", {
       url: `${API_URL}${endpoint}`,
       method,
       headers,
-      body: method !== "GET" ? payload : name,
+      body: method !== "GET" ? payload : undefined,
     });
 
     const res = await fetch(`${API_URL}${endpoint}`, {
       method,
       headers,
-      body: method !== "GET" ? JSON.stringify(payload) : name,
+      body: method !== "GET" ? JSON.stringify(payload) : undefined,
     });
 
     let data: any = {};

@@ -36,6 +36,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         try {
           const response = await validateToken(token);
           setUser(response.user);
+          const orgId = response.orgId;
+          localStorage.setItem("orgId", orgId);
           setIsAuthenticated(true);
         } catch (error) {
           console.error("Token validation failed:", error);

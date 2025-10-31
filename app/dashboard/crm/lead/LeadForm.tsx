@@ -1,16 +1,18 @@
 "use client";
 
-import { useState ,useEffect} from "react";
+import { useState, useEffect } from "react";
 import { Toaster, toast } from "sonner";
 import { apiRequest } from "@/lib/api";
 import Autocomplete from "@mui/material/Autocomplete";
 import TextField from "@mui/material/TextField";
 import { useRouter } from "next/navigation";
+import { validateToken } from "@/lib/api";
 
 export default function LeadForm({ onLeadCreated }: { onLeadCreated?: () => void }) {
   const router = useRouter();
+
   const [form, setForm] = useState({
-    leadOwner: "You",
+    leadOwner: "",
     firstName: "",
     lastName: "",
     company: "",
@@ -30,43 +32,74 @@ export default function LeadForm({ onLeadCreated }: { onLeadCreated?: () => void
   });
 
   const [loading, setLoading] = useState(false);
-  const [companyOptions, setCompanyOptions] = useState<string[]>([]);
-  const [loadingCompanies, setLoadingCompanies] = useState(false);
+  const [loadingData, setLoadingData] = useState(false);
 
-  //  Fetch company names 
-  useEffect(() => {
-  const fetchCompanyNames = async () => {
+  const [companyOptions, setCompanyOptions] = useState<string[]>([]);
+  const [leadOwnerOptions, setLeadOwnerOptions] = useState<{ label: string; id: string }[]>([]);
+
+ // ✅ Combined useEffect for fetching both company and lead owner data
+useEffect(() => {
+  const fetchInitialData = async () => {
     try {
-      setLoadingCompanies(true);
+      setLoadingData(true);
       const token = localStorage.getItem("token");
+
       if (!token) {
-        toast.error("session expired. Please log in again.");
+        toast.error("Session expired. Please log in again.");
         return router.push("/auth/login");
       }
+        const data = await validateToken(token);
+      // Fetch company & user data in parallel
+      const [companyData, userData, currentUser] = await Promise.all([
+        apiRequest("/crm/api/lead/filter", "GET", null, token),
+        apiRequest("/identity/api/auth/users", "GET", null, token),
+        data.user.orgId]);
+        console.log("Combined Data Fetched:", currentUser);
 
-      //  GET request 
-      const data = await apiRequest("/crm/api/lead/filter", "GET", null, token);
-
-      if (Array.isArray(data)) {
-        const names = data
-          .map((lead: any) => lead.company)
-          .filter((name: any): name is string => typeof name === "string");
+      // --- Company Data ---
+      if (Array.isArray(companyData)) {
+        const names = companyData
+          .map((lead: any) => lead.company?.trim())
+          .filter((name: any): name is string => !!name && typeof name === "string");
 
         const uniqueNames = Array.from(new Set(names));
         setCompanyOptions(uniqueNames);
       } else {
-        toast.error("Invalid data format from API");
+        toast.error("Invalid company data format");
+      }
+
+      // --- Lead Owner Data ---
+      if (Array.isArray(userData) && currentUser) {
+        // ✅ Filter users with same orgId as current user
+        const filteredUsers = userData.filter(
+          (user: any) => user.orgId === currentUser
+        );
+
+        // ✅ Deduplicate by userId
+        const uniqueOwnersMap = new Map<string, { label: string; id: string }>();
+
+        filteredUsers.forEach((user: any) => {
+          const label = user.fullName || user.email;
+          const id = user.userId;
+          if (label && id && !uniqueOwnersMap.has(id)) {
+            uniqueOwnersMap.set(id, { label, id });
+          }
+        });
+
+        setLeadOwnerOptions(Array.from(uniqueOwnersMap.values()));
+      } else {
+        toast.error("Invalid user data format or current user orgId missing");
       }
     } catch (error: any) {
-      console.error("Error fetching company names:", error);
-      toast.error("Failed to load company names");
-    }finally {
-      setLoadingCompanies(false);
+      console.error("Error fetching initial data:", error);
+      toast.error("Failed to load dropdown data");
+    } finally {
+      setLoadingData(false);
     }
   };
 
-  fetchCompanyNames();
-}, []);
+  fetchInitialData();
+}, [router]);
 
   const leadSourceOptions = [
     "None",
@@ -94,16 +127,16 @@ export default function LeadForm({ onLeadCreated }: { onLeadCreated?: () => void
     const { name, value } = e.target;
     setForm({ ...form, [name]: value });
   };
-// saves and calls backend
+
+  //  Submit Form
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
       const token = localStorage.getItem("token");
-      console.log("Token before API call:", token);
       if (!token) {
-        toast.error(" session expired. Please log in again.");
+        toast.error("Session expired. Please log in again.");
         return router.push("/auth/login");
       }
 
@@ -111,9 +144,10 @@ export default function LeadForm({ onLeadCreated }: { onLeadCreated?: () => void
 
       toast.success("Lead created successfully!");
       console.log("Response:", data);
+
       if (onLeadCreated) onLeadCreated();
 
-      // Reset form after success
+      // Reset form
       setForm({
         leadOwner: "",
         firstName: "",
@@ -134,7 +168,7 @@ export default function LeadForm({ onLeadCreated }: { onLeadCreated?: () => void
         description: "",
       });
     } catch (err: any) {
-      toast.error(` Failed to create lead: ${err.message}`);
+      toast.error(`Failed to create lead: ${err.message}`);
       console.error("Error:", err);
     } finally {
       setLoading(false);
@@ -152,19 +186,48 @@ export default function LeadForm({ onLeadCreated }: { onLeadCreated?: () => void
         <h2 className="text-xl font-semibold mb-6">Create Lead</h2>
 
         <div className="grid grid-cols-2 gap-4">
-      
+          {/* Lead Owner Autocomplete */}
           <div className="col-span-2">
-            <label className="block text-sm font-medium mb-1">Lead Owner</label>
-            <input
-              type="text"
-              name="leadOwner"
-              value={form.leadOwner}
-              onChange={handleChange}
-              readOnly
-              className="w-full border rounded p-2 bg-gray-100 cursor-not-allowed"
+            <label className="block text-sm font-medium mb-1">Lead Owner *</label>
+            <Autocomplete
+              options={leadOwnerOptions}
+              loading={loadingData}
+              getOptionLabel={(option) => option.label}
+              value={leadOwnerOptions.find((opt) => opt.id === form.leadOwner) || null} // ✅ Match by ID now
+              onChange={(_, newValue) =>
+                setForm((prev) => ({
+                  ...prev,
+                  leadOwner: newValue ? newValue.id : "", // ✅ Store ID instead of label
+                }))   
+              }
+              renderOption={(props, option, index) => (
+                <li {...props} key={`${option.id}-${index}`}>
+                  {option.label}
+                </li>
+              )}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  placeholder="Select Lead Owner"
+                  variant="outlined"
+                  size="small"
+                  InputProps={{
+                    ...params.InputProps,
+                    endAdornment: (
+                      <>
+                        {loadingData ? (
+                          <span className="text-gray-400 text-xs mr-2">Loading...</span>
+                        ) : null}
+                        {params.InputProps.endAdornment}
+                      </>
+                    ),
+                  }}
+                />
+              )}
             />
           </div>
-    
+
+          {/* First Name */}
           <div>
             <label className="block text-sm font-medium mb-1">First Name *</label>
             <input
@@ -177,6 +240,7 @@ export default function LeadForm({ onLeadCreated }: { onLeadCreated?: () => void
             />
           </div>
 
+          {/* Last Name */}
           <div>
             <label className="block text-sm font-medium mb-1">Last Name *</label>
             <input
@@ -189,22 +253,25 @@ export default function LeadForm({ onLeadCreated }: { onLeadCreated?: () => void
             />
           </div>
 
-          {/* Company Autocomplete (Dynamic from API) */}
+          {/* Company Autocomplete */}
           <div>
             <label className="block text-sm font-medium mb-1">Company *</label>
             <Autocomplete
               freeSolo
-              loading={loadingCompanies}
+              loading={loadingData}
               options={companyOptions}
               value={form.company}
-              onChange={(_, newValue) => {
-                // When user selects from dropdown
-                setForm((prev) => ({ ...prev, company: newValue || "" }));
-              }}
-              onInputChange={(_, newInputValue) => {
-                // When user types manually
-                setForm((prev) => ({ ...prev, company: newInputValue || "" }));
-              }}
+              onChange={(_, newValue) =>
+                setForm((prev) => ({ ...prev, company: newValue || "" }))
+              }
+              onInputChange={(_, newInputValue) =>
+                setForm((prev) => ({ ...prev, company: newInputValue || "" }))
+              }
+              renderOption={(props, option) => (
+                <li {...props} key={option}>
+                  {option}
+                </li>
+              )}
               renderInput={(params) => (
                 <TextField
                   {...params}
@@ -216,7 +283,7 @@ export default function LeadForm({ onLeadCreated }: { onLeadCreated?: () => void
                     ...params.InputProps,
                     endAdornment: (
                       <>
-                        {loadingCompanies ? (
+                        {loadingData ? (
                           <span className="text-gray-400 text-xs mr-2">Loading...</span>
                         ) : null}
                         {params.InputProps.endAdornment}
@@ -226,11 +293,11 @@ export default function LeadForm({ onLeadCreated }: { onLeadCreated?: () => void
                 />
               )}
             />
-
           </div>
 
+          {/* Email */}
           <div>
-            <label className="block text-sm font-medium mb-1">Email</label>
+            <label className="block text-sm font-medium mb-1">Email *</label>
             <input
               type="email"
               name="email"
@@ -241,6 +308,7 @@ export default function LeadForm({ onLeadCreated }: { onLeadCreated?: () => void
             />
           </div>
 
+          {/* Phone */}
           <div>
             <label className="block text-sm font-medium mb-1">Phone</label>
             <input
@@ -252,6 +320,7 @@ export default function LeadForm({ onLeadCreated }: { onLeadCreated?: () => void
             />
           </div>
 
+          {/* Lead Source */}
           <div>
             <label className="block text-sm font-medium mb-1">Lead Source</label>
             <select
@@ -269,6 +338,7 @@ export default function LeadForm({ onLeadCreated }: { onLeadCreated?: () => void
             </select>
           </div>
 
+          {/* Lead Status */}
           <div>
             <label className="block text-sm font-medium mb-1">Lead Status</label>
             <select
@@ -285,6 +355,7 @@ export default function LeadForm({ onLeadCreated }: { onLeadCreated?: () => void
             </select>
           </div>
 
+          {/* Industry */}
           <div>
             <label className="block text-sm font-medium mb-1">Industry</label>
             <input
@@ -296,6 +367,7 @@ export default function LeadForm({ onLeadCreated }: { onLeadCreated?: () => void
             />
           </div>
 
+          {/* No. of Employees */}
           <div>
             <label className="block text-sm font-medium mb-1">No. of Employees</label>
             <input
@@ -307,6 +379,7 @@ export default function LeadForm({ onLeadCreated }: { onLeadCreated?: () => void
             />
           </div>
 
+          {/* Annual Revenue */}
           <div>
             <label className="block text-sm font-medium mb-1">Annual Revenue</label>
             <input
@@ -318,6 +391,7 @@ export default function LeadForm({ onLeadCreated }: { onLeadCreated?: () => void
             />
           </div>
 
+          {/* Street */}
           <div className="col-span-2">
             <label className="block text-sm font-medium mb-1">Street</label>
             <input
@@ -329,6 +403,7 @@ export default function LeadForm({ onLeadCreated }: { onLeadCreated?: () => void
             />
           </div>
 
+          {/* City */}
           <div>
             <label className="block text-sm font-medium mb-1">City</label>
             <input
@@ -340,6 +415,7 @@ export default function LeadForm({ onLeadCreated }: { onLeadCreated?: () => void
             />
           </div>
 
+          {/* State */}
           <div>
             <label className="block text-sm font-medium mb-1">State</label>
             <input
@@ -351,6 +427,7 @@ export default function LeadForm({ onLeadCreated }: { onLeadCreated?: () => void
             />
           </div>
 
+          {/* Zipcode */}
           <div>
             <label className="block text-sm font-medium mb-1">Zipcode</label>
             <input
@@ -362,6 +439,7 @@ export default function LeadForm({ onLeadCreated }: { onLeadCreated?: () => void
             />
           </div>
 
+          {/* Country */}
           <div>
             <label className="block text-sm font-medium mb-1">Country</label>
             <input
@@ -373,6 +451,7 @@ export default function LeadForm({ onLeadCreated }: { onLeadCreated?: () => void
             />
           </div>
 
+          {/* Description */}
           <div className="col-span-2">
             <label className="block text-sm font-medium mb-1">Description</label>
             <textarea
@@ -384,6 +463,7 @@ export default function LeadForm({ onLeadCreated }: { onLeadCreated?: () => void
           </div>
         </div>
 
+        {/* Submit Button */}
         <button
           type="submit"
           disabled={loading}

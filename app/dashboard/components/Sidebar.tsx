@@ -72,7 +72,7 @@ export default function Sidebar({
 
   const bottomItems = [
     { id: "profile", icon: <FaUserCircle />, label: "Profile", path: "/profile" },
-    { id: "setup", icon: <FaCog />, label: "Setup", path: "/setup" },
+    { id: "setup", icon: <FaCog />, label: "Settins", path: "/setup" },
     { id: "addnew", icon: <FaPlusCircle />, label: "Add New", path: "/add-new" },
   ];
 

@@ -60,8 +60,7 @@ const LeadList: React.FC<LeadListProps> = ({ leads, refreshLeads }) => {
       if (!token) { 
         toast.error("session expired. Please log in again.");
          throw new Error("Token missing");
-        return router.push("/auth/login");}
-
+          return router.push("/auth/login");}
       await apiRequest(`${API_BASE}/${id}`, "DELETE", null, token);
       toast.success("Lead deleted successfully!");
       refreshLeads();
