@@ -13,6 +13,7 @@ interface OrgFormValues {
 
 interface OrgApiResponse {
   message?: string;
+  orgId?: string;
 }
 
 export default function OrgPage() {

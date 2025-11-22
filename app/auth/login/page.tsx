@@ -14,9 +14,10 @@ interface LoginFormValues {
 }
 
 interface LoginApiResponse {
-  token?: string;
+  accessToken?: string;
   action?: "CREATE_ORG" | "UNAUTHORIZED_USER" | "DASHBOARD";
   message?: string;
+  orgId?: string;
 }
 
 export default function LoginPage() {
@@ -24,14 +25,21 @@ export default function LoginPage() {
   const { login } = useAuth();
 
   const handleLogin = async (form: LoginFormValues) => {
-    try {
-      const data = await apiRequest<LoginApiResponse>("/identity/api/auth/login", "POST", form);
+  console.log("Login triggered with:", form); // ✅
+  try {
+    const data = await apiRequest<LoginApiResponse>(
+      "/identity/api/auth/login",
+      "POST",
+      form
+    );
+    console.log("API response:", data); // ✅ Check full response
 
-      if (data.token) {
-        await login(data.token); // Await the login function from AuthContext
-      }
-
-      // 🧭 Handle action from backend
+    
+    if (data.accessToken) {
+      await login(data.accessToken);
+    }
+  
+    // 🧭 Handle action from backend
       switch (data.action) {
         case "CREATE_ORG":
           toast.info("Please create your organization first!");
@@ -45,6 +53,11 @@ export default function LoginPage() {
 
         case "DASHBOARD":
         default:
+          console.log("Org ID:", data.orgId);
+          if (data.orgId) {
+          localStorage.setItem("orgId", data.orgId);
+        }
+
           toast.success("Login successful!");
           router.push("/dashboard");
           break;
